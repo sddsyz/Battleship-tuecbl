@@ -1,0 +1,160 @@
+
+import java.awt.Point;
+
+public class Board {
+
+    private static final int size = 10;
+    //board size 10*10
+    private static final int fleet = 5;
+    //5 ships for each player
+    private Ship[] ships;
+    private boolean[][] shots;
+
+    public Board() {
+        ships = new Ship[fleet];
+        //array of all ships(include occupied spaces)
+        shots = new boolean[size][size];
+        //position of enermy's hit
+    }
+
+    public boolean placeShip(int index, Ship ship) {
+
+        if (ship == null) {
+            return false;
+        }
+
+        if (index < 0 || index >= ships.length) {
+            return false;
+        }
+
+        if (ship.getstartPoint() == null) {
+            return false;
+        }
+
+        if (!validPlace(ship)) {
+            return false;
+        }
+
+        ships[index] = ship;
+
+        return true;
+    }
+
+    public String shootResult(int r, int c) {
+        if (r < 0 || r >= size || c < 0 || c >= size) {
+            return "invalid";
+        }
+        //outside the board
+
+        if (shots[r][c]) {
+            return "overlap";
+        }
+        //has been shot
+
+        shots[r][c] = true;
+
+        Ship ship = findShip(r, c);
+        if (ship != null) {
+            ship.hit();
+            if (ship.sunk()) {
+                return "sunk";
+            } else {
+                return "hit";
+            }
+        }
+
+        return "miss";
+    }
+
+    public boolean isShot(int r, int c) {
+        return shots[r][c];
+    }
+
+    public boolean validPlace(Ship ship) {
+        int r = ship.getstartPoint().y;
+        int c = ship.getstartPoint().x;
+
+        for (int i = 0; i < ship.getSize(); i++) {
+
+            if (r < 0 || c < 0 || r >= size || c >= size) {
+                return false;
+            }
+            //position outside the board
+
+            if (hasShip(r, c)) {
+                return false;
+            }
+            //position occupied by others
+
+            if (ship.isvertical()) {
+                r++;
+            } else {
+                c++;
+            }
+        }
+        return true;
+    }
+
+    public boolean hasShip(int r, int c) {
+        for (int n = 0; n < ships.length; n++) {
+
+            if (ships[n] == null) {
+                continue;
+            }
+
+            int nr = ships[n].getstartPoint().y;
+            int nc = ships[n].getstartPoint().x;
+
+            for (int i = 0; i < ships[n].getSize(); i++) {
+                if (nr == r && nc == c) {
+                    return true;
+                }
+                if (ships[n].isvertical()) {
+                    nr++;
+                } else {
+                    nc++;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Ship findShip(int r, int c) {
+
+        for (int n = 0; n < ships.length; n++) {
+
+            if (ships[n] == null) {
+                continue;
+            }
+
+            int nr = ships[n].getstartPoint().y;
+            int nc = ships[n].getstartPoint().x;
+
+            for (int i = 0; i < ships[n].getSize(); i++) {
+                if (nr == r && nc == c) {
+                    return ships[n];
+                }
+                if (ships[n].isvertical()) {
+                    nr++;
+                } else {
+                    nc++;
+                }
+            }
+        }
+        return null;
+
+    }
+
+    public boolean allSunk() {
+        for (int n = 0; n < ships.length; n++) {
+            
+            if (ships[n] == null) {
+            return false;
+        }
+            if (!ships[n].sunk()) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
