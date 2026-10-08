@@ -3,8 +3,8 @@ import java.awt.Point;
 
 public class Board {
 
-    private static final int size = 10;
-    //board size 10*10
+    private static final int bsize = 10;
+    //board bsize 10*10
     private static final int fleet = 5;
     //5 ships for each player
     private Ship[] ships;
@@ -13,7 +13,7 @@ public class Board {
     public Board() {
         ships = new Ship[fleet];
         //array of all ships(include occupied spaces)
-        shots = new boolean[size][size];
+        shots = new boolean[bsize][bsize];
         //position of enermy's hit
     }
 
@@ -41,13 +41,13 @@ public class Board {
     }
 
     public String shootResult(int r, int c) {
-        if (r < 0 || r >= size || c < 0 || c >= size) {
+        if (r < 0 || r >= bsize || c < 0 || c >= bsize) {
             return "invalid";
         }
         //outside the board
 
         if (shots[r][c]) {
-            return "overlap";
+            return "alreadyshoot";
         }
         //has been shot
 
@@ -66,17 +66,13 @@ public class Board {
         return "miss";
     }
 
-    public boolean isShot(int r, int c) {
-        return shots[r][c];
-    }
-
     public boolean validPlace(Ship ship) {
         int r = ship.getstartPoint().y;
         int c = ship.getstartPoint().x;
 
         for (int i = 0; i < ship.getSize(); i++) {
 
-            if (r < 0 || c < 0 || r >= size || c >= size) {
+            if (r < 0 || c < 0 || r >= bsize || c >= bsize) {
                 return false;
             }
             //position outside the board

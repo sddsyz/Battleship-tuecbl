@@ -36,7 +36,7 @@ public class Game {
             case "invalid" -> {
                 System.out.println("Invalid position.");
             }
-            case "overlap" -> {
+            case "alreadyshoot" -> {
                 System.out.println("This position has already been shot.");
             }
             case "sunk" -> {
