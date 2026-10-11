@@ -1,9 +1,10 @@
 
+import java.awt.Point;
 import javax.swing.*;
 import java.awt.*;
 
 public class Battleship {
-    
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("Battleship");
         frame.setSize(1024, 768);
