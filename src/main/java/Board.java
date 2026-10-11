@@ -35,9 +35,22 @@ public class Board {
             return false;
         }
 
+        if (ships[index] != null) {
+            return false;
+        }
         ships[index] = ship;
 
         return true;
+    }
+
+    public Ship removeShip(int index) {
+        if (index < 0 || index >= ships.length) {
+            return null;
+        }
+
+        Ship removed = ships[index];
+        ships[index] = null;
+        return removed;
     }
 
     public String shootResult(int r, int c) {
@@ -143,10 +156,10 @@ public class Board {
 
     public boolean allSunk() {
         for (int n = 0; n < ships.length; n++) {
-            
+
             if (ships[n] == null) {
-            return false;
-        }
+                return false;
+            }
             if (!ships[n].sunk()) {
                 return false;
             }

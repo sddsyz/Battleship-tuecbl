@@ -23,6 +23,17 @@ public class BoardTest {
     }
 
     @Test
+    void shipRemoved() {
+        ship1.setStartPoint(new Point(3, 3));
+        board.placeShip(0, ship1);
+        ship2.setStartPoint(new Point(4, 3));
+        board.placeShip(1, ship2);
+        //display two ships
+        
+        assertEquals(ship2, board.removeShip(1));
+    }
+
+    @Test
     void shipOutsideBoard() {
         ship2.setStartPoint(new Point(4, 7));
         ship2.setvertical(true);
@@ -89,11 +100,11 @@ public class BoardTest {
         assertEquals("hit", board.shootResult(4, 3));
         assertEquals("sunk", board.shootResult(5, 3));
     }
-    
+
     @Test
-    void invalidShoot(){
-    assertEquals("invalid", board.shootResult(3, 10));
-    assertEquals("invalid", board.shootResult(10, 2));
-    assertEquals("invalid", board.shootResult(-3, 1));
+    void invalidShoot() {
+        assertEquals("invalid", board.shootResult(3, 10));
+        assertEquals("invalid", board.shootResult(10, 2));
+        assertEquals("invalid", board.shootResult(-3, 1));
     }
 }
