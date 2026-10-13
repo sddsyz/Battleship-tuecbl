@@ -23,7 +23,7 @@ public class Game {
         return current;
     }
 
-    public void fire(int r, int c) {
+    public String fire(int r, int c) {
         Player opponent;
         if (current == player1) {
             opponent = player2;
@@ -34,31 +34,33 @@ public class Game {
         String result = opponent.getBoard().shootResult(r, c);
         switch (result) {
             case "invalid" -> {
-                System.out.println("Invalid position.");
+                return "Invalid position";
             }
             case "alreadyshoot" -> {
-                System.out.println("This position has already been shot.");
+                return "This position has already been shot";
             }
             case "sunk" -> {
                 if (opponent.getBoard().allSunk()) {
-                    System.out.println("Game over.");
+                    return "Game over";
                 } else {
                     nextTurn();
+                    return "Sunk";
                 }
             }
-            case "hit" -> {
-                System.out.println("Hit.");
+            case "hit" -> {                
                 nextTurn();
+                return "Hit";
             }
             case "miss" -> {
-                System.out.println("Miss.");
                 nextTurn();
+                return "Miss";
             }
         }
+        return "Unknown";
     }
 
     public void nextTurn() {
-        
+
         if (current == player1) {
             current = player2;
         } else {

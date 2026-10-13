@@ -17,6 +17,21 @@ public class Interface extends javax.swing.JFrame {
     private boolean vertical = true;
     private int nextShip = 0;
 
+    private Board lastPlacedBoard = null;
+    private int lastPlacedShip = -1;
+
+    private int mouser;
+    private int mousec;
+
+    private boolean allShipsPlaced() {
+        for (boolean isPlaced : placed) {
+            if (!isPlaced) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private Game game = new Game();
 
     /**
@@ -34,6 +49,7 @@ public class Interface extends javax.swing.JFrame {
     }
 
     private void shipList() {
+        fleet1.removeAll();
         fleet1.setLayout(new java.awt.GridLayout(5, 1));
         for (int i = 0; i < 5; i++) {
             final int a = i;
@@ -45,7 +61,6 @@ public class Interface extends javax.swing.JFrame {
             });
             fleet1.add(s);
         }
-        colorField();
     }
 
     private void placeThisShip(int r, int c) {
@@ -72,6 +87,9 @@ public class Interface extends javax.swing.JFrame {
 
         fleet[selectedShip] = ship;
         placed[selectedShip] = true;
+        
+        lastPlacedShip = selectedShip;
+    lastPlacedBoard = board;
 
         colorField();
 
@@ -80,7 +98,8 @@ public class Interface extends javax.swing.JFrame {
     private void makeGrid() {
         //create button array to interact
         board1.removeAll();
-        board1.setLayout(new java.awt.GridLayout(10, 10, 1, 1));
+
+        board1.setLayout(new java.awt.GridLayout(10, 10));
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 JButton cell = new JButton();
@@ -88,10 +107,22 @@ public class Interface extends javax.swing.JFrame {
                 final int b = j;
                 //follow step can't work without declair final
                 cell.addActionListener(e -> placeThisShip(a, b));
+
+                cell.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseEntered(java.awt.event.MouseEvent e) {
+                        mouser = a;
+                        mousec = b;
+                        colorField();
+                    }
+                });
+
                 field[i][j] = cell;
                 board1.add(cell);
             }
         }
+        board1.revalidate();
+        board1.repaint();
         colorField();
     }
 
@@ -112,7 +143,38 @@ public class Interface extends javax.swing.JFrame {
             }
         }
 
-        board1.repaint();
+        if (selectedShip >= 0 && selectedShip < placed.length && !placed[selectedShip]
+                && mouser >= 0 && mousec >= 0) {
+            Ship preview = new Ship(
+                    shipnames[selectedShip],
+                    shipsizes[selectedShip]
+            );
+
+            preview.setStartPoint(
+                    new java.awt.Point(mousec, mouser)
+            );
+            preview.setvertical(vertical);
+
+            int length = shipsizes[selectedShip];
+            for (int i = 0; i < length; i++) {
+                int r;
+                int c;
+
+                if (vertical) {
+                    r = mouser + i;
+                    c = mousec;
+                } else {
+                    r = mouser;
+                    c = mousec + i;
+                }
+
+                if (r >= 0 && r < 10 && c >= 0 && c < 10) {
+                    field[r][c].setBackground(java.awt.Color.GREEN);
+                }
+            }
+            board1.repaint();
+
+        }
     }
 
     /**
@@ -130,13 +192,13 @@ public class Interface extends javax.swing.JFrame {
         orientationButton = new javax.swing.JButton();
         undoButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        finishDisplay = new javax.swing.JButton();
         startPanel = new javax.swing.JPanel();
         startButton1 = new javax.swing.JButton();
         mainTitle1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Battleship");
-        setPreferredSize(new java.awt.Dimension(800, 600));
         getContentPane().setLayout(new java.awt.CardLayout());
 
         displayPanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
@@ -163,7 +225,7 @@ public class Interface extends javax.swing.JFrame {
         fleet1.setLayout(fleet1Layout);
         fleet1Layout.setHorizontalGroup(
             fleet1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 116, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         fleet1Layout.setVerticalGroup(
             fleet1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -180,24 +242,27 @@ public class Interface extends javax.swing.JFrame {
 
         jLabel1.setText("jLabel1");
 
+        finishDisplay.setText("Finish");
+        finishDisplay.addActionListener(this::finishDisplayActionPerformed);
+
         javax.swing.GroupLayout displayPanel1Layout = new javax.swing.GroupLayout(displayPanel1);
         displayPanel1.setLayout(displayPanel1Layout);
         displayPanel1Layout.setHorizontalGroup(
             displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(displayPanel1Layout.createSequentialGroup()
                 .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(undoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(orientationButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(displayPanel1Layout.createSequentialGroup()
-                        .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addContainerGap()
+                        .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
                             .addGroup(displayPanel1Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jLabel1))
-                            .addComponent(undoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(orientationButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, displayPanel1Layout.createSequentialGroup()
-                        .addGap(0, 39, Short.MAX_VALUE)
-                        .addComponent(fleet1, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(28, 28, 28)))
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(finishDisplay, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE)))))
+                .addGap(45, 45, 45)
                 .addComponent(board1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(17, 17, 17))
         );
@@ -210,14 +275,16 @@ public class Interface extends javax.swing.JFrame {
                         .addComponent(board1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(displayPanel1Layout.createSequentialGroup()
-                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
+                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(orientationButton)
                         .addGap(18, 18, 18)
                         .addComponent(undoButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel1)
-                        .addGap(7, 7, 7))))
+                        .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1)
+                            .addComponent(finishDisplay))
+                        .addGap(4, 4, 4))))
         );
 
         getContentPane().add(displayPanel1, "card2");
@@ -242,7 +309,7 @@ public class Interface extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, startPanelLayout.createSequentialGroup()
                         .addComponent(startButton1)
                         .addGap(50, 50, 50)))
-                .addContainerGap(203, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         startPanelLayout.setVerticalGroup(
             startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -251,7 +318,7 @@ public class Interface extends javax.swing.JFrame {
                 .addComponent(mainTitle1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(startButton1)
-                .addContainerGap(176, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         getContentPane().add(startPanel, "card3");
@@ -262,6 +329,34 @@ public class Interface extends javax.swing.JFrame {
 
     private void undoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_undoButtonActionPerformed
         // TODO add your handling code here:
+         if (lastPlacedShip == -1 || lastPlacedBoard == null) {
+        jLabel1.setText("Nothing to undo.");
+        return;
+    }
+
+    // Remove the ship from the board
+    Ship removed = lastPlacedBoard.removeShip(lastPlacedShip);
+
+    if (removed != null) {
+        // Return the ship to the selection list
+        fleet[lastPlacedShip] = null;
+        placed[lastPlacedShip] = false;
+
+        // Clear the undo history
+        lastPlacedShip = -1;
+        lastPlacedBoard = null;
+        selectedShip = -1;
+
+        jLabel1.setText("Ship placement undone.");
+
+        // Refresh the board display
+        colorField();
+
+        // Refresh the ship selection list if necessary
+        shipList();
+        fleet1.revalidate();
+        fleet1.repaint();
+    }
     }//GEN-LAST:event_undoButtonActionPerformed
 
     private void orientationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_orientationButtonActionPerformed
@@ -277,15 +372,17 @@ public class Interface extends javax.swing.JFrame {
 
     private void startButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButton1ActionPerformed
         // TODO add your handling code here:
+        game = new Game();
         java.util.Arrays.fill(placed, false);
         java.util.Arrays.fill(fleet, null);
 
-
         selectedShip = -1;
         vertical = true;
-
+        mouser = -1;
+        mousec = -1;
         orientationButton.setText("Vertical");
         jLabel1.setText("Select a ship to begin.");
+        finishDisplay.setEnabled(true);
 
         makeGrid();
         shipList();
@@ -295,6 +392,45 @@ public class Interface extends javax.swing.JFrame {
 
         layout.show(getContentPane(), "card2");
     }//GEN-LAST:event_startButton1ActionPerformed
+
+    private void finishDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishDisplayActionPerformed
+        // TODO add your handling code here:
+        if (!allShipsPlaced()) {
+            jLabel1.setText("You've not placed all five ships.");
+            return;
+        }
+        if (game.getCurrent() == game.getPlayer1()) {
+
+            game.nextTurn();
+
+            // Reset GUI placement state for Player 2.
+            java.util.Arrays.fill(placed, false);
+            java.util.Arrays.fill(fleet, null);
+
+            selectedShip = -1;
+            mouser = -1;
+            mousec = -1;
+            vertical = true;
+
+            orientationButton.setText("Vertical");
+            jLabel1.setText("Player 2: Select a ship to begin.");
+
+            // Rebuild the board and ship list for Player 2.
+            makeGrid();
+            shipList();
+
+        } else {
+            // Player 2 has finished.
+            jLabel1.setText("Both players have placed their ships.");
+
+            finishDisplay.setEnabled(false);
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Setup complete! Both players are ready."
+            );
+        }
+    }//GEN-LAST:event_finishDisplayActionPerformed
 
     /**
      * @param args the command line arguments
@@ -324,6 +460,7 @@ public class Interface extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel board1;
     private javax.swing.JPanel displayPanel1;
+    private javax.swing.JButton finishDisplay;
     private javax.swing.JPanel fleet1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel mainTitle1;
