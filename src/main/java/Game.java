@@ -41,7 +41,7 @@ public class Game {
             }
             case "sunk" -> {
                 if (opponent.getBoard().allSunk()) {
-                    return "Game over";
+                    return "Game over" + current.getName() + " wins!";
                 } else {
                     nextTurn();
                     return "Sunk";

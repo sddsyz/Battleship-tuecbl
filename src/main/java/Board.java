@@ -9,12 +9,14 @@ public class Board {
     //5 ships for each player
     private Ship[] ships;
     private boolean[][] shots;
+    private String[][] shotResults;
 
     public Board() {
         ships = new Ship[fleet];
         //array of all ships(include occupied spaces)
         shots = new boolean[bsize][bsize];
         //position of enermy's hit
+        shotResults = new String[bsize][bsize];
     }
 
     public boolean placeShip(int index, Ship ship) {
@@ -70,13 +72,23 @@ public class Board {
         if (ship != null) {
             ship.hit();
             if (ship.sunk()) {
+                shotResults[r][c] = "sunk";
                 return "sunk";
             } else {
+                shotResults[r][c] = "hit";
                 return "hit";
             }
         }
-
+        shotResults[r][c] = "miss";
         return "miss";
+    }
+
+    public String getShotResult(int r, int c) {
+        if (r < 0 || r >= bsize || c < 0 || c >= bsize) {
+            return "invalid";
+        }
+
+        return shotResults[r][c];
     }
 
     public boolean validPlace(Ship ship) {

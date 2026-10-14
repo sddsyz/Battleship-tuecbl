@@ -87,9 +87,9 @@ public class Interface extends javax.swing.JFrame {
 
         fleet[selectedShip] = ship;
         placed[selectedShip] = true;
-        
+
         lastPlacedShip = selectedShip;
-    lastPlacedBoard = board;
+        lastPlacedBoard = board;
 
         colorField();
 
@@ -177,6 +177,139 @@ public class Interface extends javax.swing.JFrame {
         }
     }
 
+    private JButton[][] player1Cells = new JButton[10][10];
+    private JButton[][] player2Cells = new JButton[10][10];
+    private boolean gameFinished = false;
+
+    private void createGameCells() {
+        gameBoard1.removeAll();
+        gameBoard2.removeAll();
+
+        gameBoard1.setLayout(new java.awt.GridLayout(10, 10));
+        gameBoard2.setLayout(new java.awt.GridLayout(10, 10));
+
+        player1Cells = new JButton[10][10];
+        player2Cells = new JButton[10][10];
+
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 10; c++) {
+                final int row = r;
+                final int col = c;
+
+                JButton p1Cell = new JButton();
+                JButton p2Cell = new JButton();
+
+                player1Cells[r][c] = p1Cell;
+                player2Cells[r][c] = p2Cell;
+
+                // Player 2 shoots at Player 1's board.
+                p1Cell.addActionListener(e -> {
+                    if (!gameFinished
+                            && game.getCurrent() == game.getPlayer2()) {
+                        fireAt(row, col);
+                    }
+                });
+
+                // Player 1 shoots at Player 2's board.
+                p2Cell.addActionListener(e -> {
+                    if (!gameFinished
+                            && game.getCurrent() == game.getPlayer1()) {
+                        fireAt(row, col);
+                    }
+                });
+
+                gameBoard1.add(p1Cell);
+                gameBoard2.add(p2Cell);
+            }
+        }
+
+        gameBoard1.revalidate();
+        gameBoard2.revalidate();
+        gameBoard1.repaint();
+        gameBoard2.repaint();
+    }
+
+    private void refreshGameWindow() {
+        Board p1Board = game.getPlayer1().getBoard();
+        Board p2Board = game.getPlayer2().getBoard();
+
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 10; c++) {
+
+                // Display shots received by Player 1.
+                String p1Result = p1Board.getShotResult(r, c);
+                player1Cells[r][c].setText(shotSymbol(p1Result));
+
+                // Display shots received by Player 2.
+                String p2Result = p2Board.getShotResult(r, c);
+                player2Cells[r][c].setText(shotSymbol(p2Result));
+
+                player1Cells[r][c].setBackground(java.awt.Color.WHITE);
+                player2Cells[r][c].setBackground(java.awt.Color.WHITE);
+
+                player1Cells[r][c].setOpaque(true);
+                player2Cells[r][c].setOpaque(true);
+            }
+        }
+
+        title1.setText("PLAYER 1");
+        title2.setText("PLAYER 2");
+
+        if (gameFinished) {
+            currentTurn.setText("Game finished");
+        } else {
+            currentTurn.setText(
+                    "Turn: " + game.getCurrent().getName()
+            );
+        }
+
+        gameBoard1.repaint();
+        gameBoard2.repaint();
+    }
+
+    private String shotSymbol(String result) {
+        if ("hit".equals(result) || "sunk".equals(result)) {
+            return "X";
+        }
+
+        if ("miss".equals(result)) {
+            return "O";
+        }
+
+        return "";
+    }
+
+    private void fireAt(int r, int c) {
+        if (gameFinished) {
+            return;
+        }
+
+        Player shooter = game.getCurrent();
+
+        // Game.fire() should shoot at the opponent's existing Board.
+        String result = game.fire(r, c);
+
+        shotResult.setText(
+                shooter.getName() + ": " + result
+        );
+
+        if (result != null && result.startsWith("Game over!")) {
+            gameFinished = true;
+            setGameCellsEnabled(false);
+        }
+
+        refreshGameWindow();
+    }
+
+    private void setGameCellsEnabled(boolean enabled) {
+        for (int r = 0; r < 10; r++) {
+            for (int c = 0; c < 10; c++) {
+                player1Cells[r][c].setEnabled(enabled);
+                player2Cells[r][c].setEnabled(enabled);
+            }
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -196,6 +329,13 @@ public class Interface extends javax.swing.JFrame {
         startPanel = new javax.swing.JPanel();
         startButton1 = new javax.swing.JButton();
         mainTitle1 = new javax.swing.JLabel();
+        firePanel = new javax.swing.JPanel();
+        gameBoard2 = new javax.swing.JPanel();
+        gameBoard1 = new javax.swing.JPanel();
+        currentTurn = new javax.swing.JLabel();
+        shotResult = new javax.swing.JLabel();
+        title1 = new javax.swing.JLabel();
+        title2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Battleship");
@@ -256,7 +396,7 @@ public class Interface extends javax.swing.JFrame {
                     .addGroup(displayPanel1Layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+                            .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
                             .addGroup(displayPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel1)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -275,7 +415,7 @@ public class Interface extends javax.swing.JFrame {
                         .addComponent(board1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(displayPanel1Layout.createSequentialGroup()
-                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
+                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(orientationButton)
                         .addGap(18, 18, 18)
@@ -323,40 +463,117 @@ public class Interface extends javax.swing.JFrame {
 
         getContentPane().add(startPanel, "card3");
 
+        gameBoard2.setBackground(new java.awt.Color(255, 255, 255));
+        gameBoard2.setPreferredSize(new java.awt.Dimension(400, 400));
+
+        javax.swing.GroupLayout gameBoard2Layout = new javax.swing.GroupLayout(gameBoard2);
+        gameBoard2.setLayout(gameBoard2Layout);
+        gameBoard2Layout.setHorizontalGroup(
+            gameBoard2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        gameBoard2Layout.setVerticalGroup(
+            gameBoard2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+
+        gameBoard1.setBackground(new java.awt.Color(255, 255, 255));
+        gameBoard1.setPreferredSize(new java.awt.Dimension(400, 400));
+
+        javax.swing.GroupLayout gameBoard1Layout = new javax.swing.GroupLayout(gameBoard1);
+        gameBoard1.setLayout(gameBoard1Layout);
+        gameBoard1Layout.setHorizontalGroup(
+            gameBoard1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        gameBoard1Layout.setVerticalGroup(
+            gameBoard1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+
+        currentTurn.setText("Turn");
+
+        shotResult.setText("jLabel2");
+
+        title1.setText("PLAYER1");
+
+        title2.setText("PLAYER2");
+
+        javax.swing.GroupLayout firePanelLayout = new javax.swing.GroupLayout(firePanel);
+        firePanel.setLayout(firePanelLayout);
+        firePanelLayout.setHorizontalGroup(
+            firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(firePanelLayout.createSequentialGroup()
+                .addGap(265, 265, 265)
+                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(shotResult, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                    .addComponent(currentTurn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(firePanelLayout.createSequentialGroup()
+                .addGap(21, 21, 21)
+                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(gameBoard1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(title1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(gameBoard2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(title2))
+                .addGap(28, 28, 28))
+        );
+        firePanelLayout.setVerticalGroup(
+            firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(firePanelLayout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(title1)
+                    .addComponent(title2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(gameBoard1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(gameBoard2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(shotResult)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(currentTurn)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        getContentPane().add(firePanel, "card4");
+
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void undoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_undoButtonActionPerformed
         // TODO add your handling code here:
-         if (lastPlacedShip == -1 || lastPlacedBoard == null) {
-        jLabel1.setText("Nothing to undo.");
-        return;
-    }
+        if (lastPlacedShip == -1 || lastPlacedBoard == null) {
+            jLabel1.setText("Nothing to undo.");
+            return;
+        }
 
-    // Remove the ship from the board
-    Ship removed = lastPlacedBoard.removeShip(lastPlacedShip);
+        // Remove the ship from the board
+        Ship removed = lastPlacedBoard.removeShip(lastPlacedShip);
 
-    if (removed != null) {
-        // Return the ship to the selection list
-        fleet[lastPlacedShip] = null;
-        placed[lastPlacedShip] = false;
+        if (removed != null) {
+            // Return the ship to the selection list
+            fleet[lastPlacedShip] = null;
+            placed[lastPlacedShip] = false;
 
-        // Clear the undo history
-        lastPlacedShip = -1;
-        lastPlacedBoard = null;
-        selectedShip = -1;
+            // Clear the undo history
+            lastPlacedShip = -1;
+            lastPlacedBoard = null;
+            selectedShip = -1;
 
-        jLabel1.setText("Ship placement undone.");
+            jLabel1.setText("Ship placement undone.");
 
-        // Refresh the board display
-        colorField();
+            // Refresh the board display
+            colorField();
 
-        // Refresh the ship selection list if necessary
-        shipList();
-        fleet1.revalidate();
-        fleet1.repaint();
-    }
+            // Refresh the ship selection list if necessary
+            shipList();
+            fleet1.revalidate();
+            fleet1.repaint();
+        }
     }//GEN-LAST:event_undoButtonActionPerformed
 
     private void orientationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_orientationButtonActionPerformed
@@ -421,14 +638,22 @@ public class Interface extends javax.swing.JFrame {
 
         } else {
             // Player 2 has finished.
-            jLabel1.setText("Both players have placed their ships.");
+            game.nextTurn();
 
-            finishDisplay.setEnabled(false);
+            gameFinished = false;
 
-            javax.swing.JOptionPane.showMessageDialog(
-                    this,
-                    "Setup complete! Both players are ready."
-            );
+            // Clear placement-only undo history.
+            lastPlacedShip = -1;
+            lastPlacedBoard = null;
+
+            // Build the firing UI using the existing Game.
+            createGameCells();
+            refreshGameWindow();
+
+            java.awt.CardLayout layout
+                    = (java.awt.CardLayout) getContentPane().getLayout();
+
+            layout.show(getContentPane(), "card4");
         }
     }//GEN-LAST:event_finishDisplayActionPerformed
 
@@ -459,14 +684,21 @@ public class Interface extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel board1;
+    private javax.swing.JLabel currentTurn;
     private javax.swing.JPanel displayPanel1;
     private javax.swing.JButton finishDisplay;
+    private javax.swing.JPanel firePanel;
     private javax.swing.JPanel fleet1;
+    private javax.swing.JPanel gameBoard1;
+    private javax.swing.JPanel gameBoard2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel mainTitle1;
     private javax.swing.JButton orientationButton;
+    private javax.swing.JLabel shotResult;
     private javax.swing.JButton startButton1;
     private javax.swing.JPanel startPanel;
+    private javax.swing.JLabel title1;
+    private javax.swing.JLabel title2;
     private javax.swing.JButton undoButton;
     // End of variables declaration//GEN-END:variables
 }
