@@ -11,13 +11,13 @@ public class Battleship extends javax.swing.JFrame {
     private static final int[] shipsizes = {5, 4, 3, 3, 2};
     private JButton[][] field = new JButton[10][10];
     private Ship[] fleet = new Ship[5];
-    
+
     //variable for place ship phase
     private boolean[] placed = new boolean[5];
     private int selectedShip = -1;
     private boolean vertical = true;
     private int nextShip = 0;
-    
+
     //for undo method
     private Board lastPlacedBoard = null;
     private int lastPlacedShip = -1;
@@ -38,9 +38,6 @@ public class Battleship extends javax.swing.JFrame {
 
     private Game game = new Game();
 
-    /**
-     * Creates new form Interface
-     */
     public Battleship() {
         initComponents();
 
@@ -72,11 +69,21 @@ public class Battleship extends javax.swing.JFrame {
     private void placeThisShip(int r, int c) {
 
         if (selectedShip < 0 || selectedShip >= placed.length) {
-            jLabel1.setText("Select a ship first.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a ship first.",
+                    "Invalid selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
         if (placed[selectedShip]) {
-            jLabel1.setText("You've placed this ship.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "You've placed this ship.",
+                    "Invalid selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
 
@@ -87,7 +94,12 @@ public class Battleship extends javax.swing.JFrame {
         Board board = game.getCurrent().getBoard();
 
         if (!board.placeShip(selectedShip, ship)) {
-            jLabel1.setText("Invalid placement.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "You can't place ship overlapped.",
+                    "Invalid placement",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
 
@@ -248,10 +260,8 @@ public class Battleship extends javax.swing.JFrame {
             for (int c = 0; c < 10; c++) {
 
                 // text reminder for fire result
-                String p1Result = p1Board.getShotResult(r, c);
-                player1Cells[r][c].setText(shotSymbol(p1Result));
-                String p2Result = p2Board.getShotResult(r, c);
-                player2Cells[r][c].setText(shotSymbol(p2Result));
+                player1Cells[r][c].setText(shotSymbol(p1Board, r, c));
+                player2Cells[r][c].setText(shotSymbol(p2Board, r, c));
 
                 player1Cells[r][c].setBackground(java.awt.Color.WHITE);
                 player2Cells[r][c].setBackground(java.awt.Color.WHITE);
@@ -263,7 +273,7 @@ public class Battleship extends javax.swing.JFrame {
         }
 
         if (gameFinished) {
-            currentTurn.setText("Game finished");
+            currentTurn.setText("Game Finished");
         } else {
             currentTurn.setText(
                     "Turn: " + game.getCurrent().getName()
@@ -274,8 +284,16 @@ public class Battleship extends javax.swing.JFrame {
         gameBoard2.repaint();
     }
 
-    private String shotSymbol(String result) {
-        if ("hit".equals(result) || "sunk".equals(result)) {
+    private String shotSymbol(Board board, int r, int c) {
+        Ship ship = board.findShip(r, c);
+
+        if (ship != null && ship.sunk()) {
+            return "#";
+        }
+
+        String result = board.getShotResult(r, c);
+
+        if ("hit".equals(result)) {
             return "X";
         }
         if ("miss".equals(result)) {
@@ -293,14 +311,17 @@ public class Battleship extends javax.swing.JFrame {
         String result = game.fire(r, c);
 
         shotResult.setText(shooter.getName() + ": " + result);
-        
-        if (result != null && result.equals("Game over!")) {
-            gameFinished = true;
-        }
 
+        if (game.winner() != null) {
+            gameFinished = true;
+            winner.setText(game.winner().getName() + " WIN");
+            endGame.setLocationRelativeTo(this);
+            endGame.setVisible(true);
+            refreshGameWindow();
+            return;
+        }
         refreshGameWindow();
     }
-
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -311,12 +332,15 @@ public class Battleship extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        endGame = new javax.swing.JDialog();
+        winner = new javax.swing.JLabel();
+        newGame = new javax.swing.JButton();
+        exit = new javax.swing.JButton();
         displayPanel1 = new javax.swing.JPanel();
         board1 = new javax.swing.JPanel();
         fleet1 = new javax.swing.JPanel();
         orientationButton = new javax.swing.JButton();
         undoButton = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
         finishDisplay = new javax.swing.JButton();
         startPanel = new javax.swing.JPanel();
         startButton1 = new javax.swing.JButton();
@@ -328,6 +352,49 @@ public class Battleship extends javax.swing.JFrame {
         shotResult = new javax.swing.JLabel();
         title1 = new javax.swing.JLabel();
         title2 = new javax.swing.JLabel();
+
+        endGame.setPreferredSize(new java.awt.Dimension(200, 200));
+        endGame.setSize(new java.awt.Dimension(200, 200));
+
+        winner.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 18)); // NOI18N
+        winner.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        winner.setText("WIN");
+
+        newGame.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 14)); // NOI18N
+        newGame.setText("New Game");
+        newGame.addActionListener(this::newGameActionPerformed);
+
+        exit.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 14)); // NOI18N
+        exit.setText("Exit");
+        exit.addActionListener(this::exitActionPerformed);
+
+        javax.swing.GroupLayout endGameLayout = new javax.swing.GroupLayout(endGame.getContentPane());
+        endGame.getContentPane().setLayout(endGameLayout);
+        endGameLayout.setHorizontalGroup(
+            endGameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(endGameLayout.createSequentialGroup()
+                .addGroup(endGameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(endGameLayout.createSequentialGroup()
+                        .addGap(34, 34, 34)
+                        .addComponent(winner, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(endGameLayout.createSequentialGroup()
+                        .addGap(48, 48, 48)
+                        .addGroup(endGameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(exit, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(newGame))))
+                .addContainerGap(38, Short.MAX_VALUE))
+        );
+        endGameLayout.setVerticalGroup(
+            endGameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(endGameLayout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addComponent(winner)
+                .addGap(19, 19, 19)
+                .addComponent(newGame)
+                .addGap(18, 18, 18)
+                .addComponent(exit)
+                .addContainerGap(37, Short.MAX_VALUE))
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Battleship");
@@ -372,8 +439,7 @@ public class Battleship extends javax.swing.JFrame {
         undoButton.setText("Undo");
         undoButton.addActionListener(this::undoButtonActionPerformed);
 
-        jLabel1.setText("jLabel1");
-
+        finishDisplay.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 24)); // NOI18N
         finishDisplay.setText("Finish");
         finishDisplay.addActionListener(this::finishDisplayActionPerformed);
 
@@ -381,19 +447,19 @@ public class Battleship extends javax.swing.JFrame {
         displayPanel1.setLayout(displayPanel1Layout);
         displayPanel1Layout.setHorizontalGroup(
             displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(displayPanel1Layout.createSequentialGroup()
-                .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(undoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(orientationButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(displayPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, displayPanel1Layout.createSequentialGroup()
+                .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, displayPanel1Layout.createSequentialGroup()
                         .addContainerGap()
+                        .addComponent(finishDisplay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, displayPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, displayPanel1Layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
                         .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
-                            .addGroup(displayPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(finishDisplay, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE)))))
+                            .addComponent(orientationButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
+                            .addComponent(undoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addGap(45, 45, 45)
                 .addComponent(board1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(17, 17, 17))
@@ -408,15 +474,13 @@ public class Battleship extends javax.swing.JFrame {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(displayPanel1Layout.createSequentialGroup()
                         .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
-                        .addComponent(orientationButton)
-                        .addGap(18, 18, 18)
-                        .addComponent(undoButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(displayPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(finishDisplay))
-                        .addGap(4, 4, 4))))
+                        .addComponent(orientationButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(undoButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(finishDisplay, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(15, 15, 15))))
         );
 
         getContentPane().add(displayPanel1, "card2");
@@ -435,22 +499,23 @@ public class Battleship extends javax.swing.JFrame {
         startPanelLayout.setHorizontalGroup(
             startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(startPanelLayout.createSequentialGroup()
-                .addGap(187, 187, 187)
                 .addGroup(startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mainTitle1, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, startPanelLayout.createSequentialGroup()
-                        .addComponent(startButton1)
-                        .addGap(50, 50, 50)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(startPanelLayout.createSequentialGroup()
+                        .addGap(297, 297, 297)
+                        .addComponent(mainTitle1))
+                    .addGroup(startPanelLayout.createSequentialGroup()
+                        .addGap(350, 350, 350)
+                        .addComponent(startButton1)))
+                .addContainerGap(348, Short.MAX_VALUE))
         );
         startPanelLayout.setVerticalGroup(
             startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(startPanelLayout.createSequentialGroup()
-                .addGap(139, 139, 139)
+                .addGap(142, 142, 142)
                 .addComponent(mainTitle1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(91, 91, 91)
                 .addComponent(startButton1)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(175, Short.MAX_VALUE))
         );
 
         getContentPane().add(startPanel, "card3");
@@ -483,9 +548,13 @@ public class Battleship extends javax.swing.JFrame {
             .addGap(0, 400, Short.MAX_VALUE)
         );
 
+        currentTurn.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 18)); // NOI18N
+        currentTurn.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         currentTurn.setText("Turn");
 
-        shotResult.setText("jLabel2");
+        shotResult.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 18)); // NOI18N
+        shotResult.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        shotResult.setText("No Result");
 
         title1.setText("PLAYER1");
 
@@ -496,12 +565,6 @@ public class Battleship extends javax.swing.JFrame {
         firePanelLayout.setHorizontalGroup(
             firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(firePanelLayout.createSequentialGroup()
-                .addGap(265, 265, 265)
-                .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(shotResult, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
-                    .addComponent(currentTurn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(firePanelLayout.createSequentialGroup()
                 .addGap(21, 21, 21)
                 .addGroup(firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(gameBoard1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -511,6 +574,14 @@ public class Battleship extends javax.swing.JFrame {
                     .addComponent(gameBoard2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(title2))
                 .addGap(28, 28, 28))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, firePanelLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(shotResult, javax.swing.GroupLayout.PREFERRED_SIZE, 621, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(firePanelLayout.createSequentialGroup()
+                .addGap(335, 335, 335)
+                .addComponent(currentTurn, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         firePanelLayout.setVerticalGroup(
             firePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -524,9 +595,9 @@ public class Battleship extends javax.swing.JFrame {
                     .addComponent(gameBoard1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameBoard2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(shotResult)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(currentTurn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(shotResult)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -539,7 +610,12 @@ public class Battleship extends javax.swing.JFrame {
     private void undoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_undoButtonActionPerformed
         // TODO add your handling code here:
         if (lastPlacedShip == -1 || lastPlacedBoard == null) {
-            jLabel1.setText("Nothing to undo.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "You can only undo your final placing.",
+                    "Nothing to undo",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
 
@@ -555,8 +631,6 @@ public class Battleship extends javax.swing.JFrame {
             lastPlacedShip = -1;
             lastPlacedBoard = null;
             selectedShip = -1;
-
-            jLabel1.setText("Ship placement undone.");
 
             // Refresh the board display
             colorField();
@@ -582,6 +656,7 @@ public class Battleship extends javax.swing.JFrame {
     private void startButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButton1ActionPerformed
         // reset all things before a new game
         game = new Game();
+        gameFinished = false;
         java.util.Arrays.fill(placed, false);
         java.util.Arrays.fill(fleet, null);
 
@@ -590,7 +665,6 @@ public class Battleship extends javax.swing.JFrame {
         mouser = -1;
         mousec = -1;
         orientationButton.setText("Vertical");
-        jLabel1.setText("Select a ship to begin.");
         finishDisplay.setEnabled(true);
 
         makeGrid();
@@ -605,7 +679,12 @@ public class Battleship extends javax.swing.JFrame {
     private void finishDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishDisplayActionPerformed
         // switch phase after placing all ships
         if (!allShipsPlaced()) {
-            jLabel1.setText("You've not placed all five ships.");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "You've not placed all five ships.",
+                    "Invalid finish",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
         if (game.getCurrent() == game.getPlayer1()) {
@@ -622,7 +701,6 @@ public class Battleship extends javax.swing.JFrame {
             vertical = true;
 
             orientationButton.setText("Vertical");
-            jLabel1.setText("Player 2: Select a ship to begin.");
 
             makeGrid();
             shipList();
@@ -645,6 +723,20 @@ public class Battleship extends javax.swing.JFrame {
             layout.show(getContentPane(), "card4");
         }
     }//GEN-LAST:event_finishDisplayActionPerformed
+
+    private void newGameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newGameActionPerformed
+        // return to start window
+        endGame.setVisible(false);
+
+        java.awt.CardLayout layout = (java.awt.CardLayout) getContentPane().getLayout();
+
+        layout.show(getContentPane(), "card3");
+    }//GEN-LAST:event_newGameActionPerformed
+
+    private void exitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitActionPerformed
+        // close all
+        System.exit(0);
+    }//GEN-LAST:event_exitActionPerformed
 
     /**
      * @param args the command line arguments
@@ -675,13 +767,15 @@ public class Battleship extends javax.swing.JFrame {
     private javax.swing.JPanel board1;
     private javax.swing.JLabel currentTurn;
     private javax.swing.JPanel displayPanel1;
+    private javax.swing.JDialog endGame;
+    private javax.swing.JButton exit;
     private javax.swing.JButton finishDisplay;
     private javax.swing.JPanel firePanel;
     private javax.swing.JPanel fleet1;
     private javax.swing.JPanel gameBoard1;
     private javax.swing.JPanel gameBoard2;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel mainTitle1;
+    private javax.swing.JButton newGame;
     private javax.swing.JButton orientationButton;
     private javax.swing.JLabel shotResult;
     private javax.swing.JButton startButton1;
@@ -689,5 +783,6 @@ public class Battleship extends javax.swing.JFrame {
     private javax.swing.JLabel title1;
     private javax.swing.JLabel title2;
     private javax.swing.JButton undoButton;
+    private javax.swing.JLabel winner;
     // End of variables declaration//GEN-END:variables
 }
