@@ -1,5 +1,6 @@
 
 import javax.swing.*;
+import java.awt.Point;
 
 public class Battleship extends javax.swing.JFrame {
 
@@ -26,7 +27,6 @@ public class Battleship extends javax.swing.JFrame {
     private int mouser;
     private int mousec;
 
-    //may be moved to Board class
     private boolean allShipsPlaced() {
         for (boolean isPlaced : placed) {
             if (!isPlaced) {
@@ -40,12 +40,8 @@ public class Battleship extends javax.swing.JFrame {
 
     public Battleship() {
         initComponents();
-
-        java.awt.CardLayout layout
-                = (java.awt.CardLayout) getContentPane().getLayout();
-
+        java.awt.CardLayout layout = (java.awt.CardLayout) getContentPane().getLayout();
         layout.show(getContentPane(), "card3");
-
         setLocationRelativeTo(null);
     }
 
@@ -111,6 +107,37 @@ public class Battleship extends javax.swing.JFrame {
 
         colorField();
 
+    }
+
+    //decide game mode
+    private String mode() {
+        return (String) modeSelect.getSelectedItem();
+    }
+
+    //for PVE
+    private ComputerPlayer ai = new ComputerPlayer();
+    private java.util.Random rd = new java.util.Random();
+
+    //computer place ship
+    private void aiPlace() {
+        Board board = game.getPlayer2().getBoard();
+
+        for (int i = 0; i < 5; i++) {
+            boolean a = false;
+
+            while (!a) {
+                Ship ship = new Ship(shipnames[i], shipsizes[i]);
+
+                int r = rd.nextInt(10);
+                int c = rd.nextInt(10);
+                boolean isVertical = rd.nextBoolean();
+
+                ship.setStartPoint(new java.awt.Point(c, r));
+                ship.setvertical(isVertical);
+
+                a = board.placeShip(i, ship);
+            }
+        }
     }
 
     private void makeGrid() {
@@ -228,15 +255,15 @@ public class Battleship extends javax.swing.JFrame {
 
                 // player2 shoots at player1's board.
                 p1Cell.addActionListener(e -> {
-                    if (!gameFinished && game.getCurrent() == game.getPlayer2()) {
+                    if (!gameFinished && game.getCurrent() == game.getPlayer2()
+                            && "human vs human".equals(mode())) {
                         fireAt(row, col);
                     }
                 });
 
                 // player1 shoots at player2's board.
                 p2Cell.addActionListener(e -> {
-                    if (!gameFinished
-                            && game.getCurrent() == game.getPlayer1()) {
+                    if (!gameFinished && game.getCurrent() == game.getPlayer1()) {
                         fireAt(row, col);
                     }
                 });
@@ -275,9 +302,7 @@ public class Battleship extends javax.swing.JFrame {
         if (gameFinished) {
             currentTurn.setText("Game Finished");
         } else {
-            currentTurn.setText(
-                    "Turn: " + game.getCurrent().getName()
-            );
+            currentTurn.setText("Turn: " + game.getCurrent().getName());
         }
 
         gameBoard1.repaint();
@@ -285,8 +310,8 @@ public class Battleship extends javax.swing.JFrame {
     }
 
     private String shotSymbol(Board board, int r, int c) {
+        //replace all squares a ship occupied by "#" when sunk
         Ship ship = board.findShip(r, c);
-
         if (ship != null && ship.sunk()) {
             return "#";
         }
@@ -312,15 +337,31 @@ public class Battleship extends javax.swing.JFrame {
 
         shotResult.setText(shooter.getName() + ": " + result);
 
+        if (end()) {
+            return;
+        }
+
+        if ("human vs computer".equals(mode()) && game.getCurrent() == game.getPlayer2()) {
+            Point shot = ai.randomTarget();
+            String rs = game.fire(shot.y, shot.x);
+            shotResult.setText("Player2: " + rs);
+            if (end()) {
+                return;
+            }
+            refreshGameWindow();
+        }
+    }
+
+    private boolean end() {
         if (game.winner() != null) {
             gameFinished = true;
             winner.setText(game.winner().getName() + " WIN");
             endGame.setLocationRelativeTo(this);
             endGame.setVisible(true);
             refreshGameWindow();
-            return;
+            return true;
         }
-        refreshGameWindow();
+        return false;
     }
 
     /**
@@ -345,6 +386,7 @@ public class Battleship extends javax.swing.JFrame {
         startPanel = new javax.swing.JPanel();
         startButton1 = new javax.swing.JButton();
         mainTitle1 = new javax.swing.JLabel();
+        modeSelect = new javax.swing.JComboBox<>();
         firePanel = new javax.swing.JPanel();
         gameBoard2 = new javax.swing.JPanel();
         gameBoard1 = new javax.swing.JPanel();
@@ -353,7 +395,6 @@ public class Battleship extends javax.swing.JFrame {
         title1 = new javax.swing.JLabel();
         title2 = new javax.swing.JLabel();
 
-        endGame.setPreferredSize(new java.awt.Dimension(200, 200));
         endGame.setSize(new java.awt.Dimension(200, 200));
 
         winner.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 18)); // NOI18N
@@ -473,7 +514,7 @@ public class Battleship extends javax.swing.JFrame {
                         .addComponent(board1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(displayPanel1Layout.createSequentialGroup()
-                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                        .addComponent(fleet1, javax.swing.GroupLayout.DEFAULT_SIZE, 356, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(orientationButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -494,28 +535,37 @@ public class Battleship extends javax.swing.JFrame {
         mainTitle1.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 36)); // NOI18N
         mainTitle1.setText("BATTLESHIP");
 
+        modeSelect.setFont(new java.awt.Font("Microsoft YaHei UI", 0, 24)); // NOI18N
+        modeSelect.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "human vs human", "human vs computer" }));
+        modeSelect.addActionListener(this::modeSelectActionPerformed);
+
         javax.swing.GroupLayout startPanelLayout = new javax.swing.GroupLayout(startPanel);
         startPanel.setLayout(startPanelLayout);
         startPanelLayout.setHorizontalGroup(
             startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(startPanelLayout.createSequentialGroup()
+                .addContainerGap(296, Short.MAX_VALUE)
                 .addGroup(startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(startPanelLayout.createSequentialGroup()
-                        .addGap(297, 297, 297)
-                        .addComponent(mainTitle1))
-                    .addGroup(startPanelLayout.createSequentialGroup()
-                        .addGap(350, 350, 350)
-                        .addComponent(startButton1)))
-                .addContainerGap(348, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, startPanelLayout.createSequentialGroup()
+                        .addComponent(mainTitle1)
+                        .addGap(315, 315, 315))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, startPanelLayout.createSequentialGroup()
+                        .addComponent(startButton1)
+                        .addGap(369, 369, 369))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, startPanelLayout.createSequentialGroup()
+                        .addComponent(modeSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(281, 281, 281))))
         );
         startPanelLayout.setVerticalGroup(
             startPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(startPanelLayout.createSequentialGroup()
                 .addGap(142, 142, 142)
                 .addComponent(mainTitle1)
-                .addGap(91, 91, 91)
+                .addGap(18, 18, 18)
+                .addComponent(modeSelect, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(startButton1)
-                .addContainerGap(175, Short.MAX_VALUE))
+                .addContainerGap(212, Short.MAX_VALUE))
         );
 
         getContentPane().add(startPanel, "card3");
@@ -656,6 +706,7 @@ public class Battleship extends javax.swing.JFrame {
     private void startButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButton1ActionPerformed
         // reset all things before a new game
         game = new Game();
+        ai = new ComputerPlayer();
         gameFinished = false;
         java.util.Arrays.fill(placed, false);
         java.util.Arrays.fill(fleet, null);
@@ -687,41 +738,52 @@ public class Battleship extends javax.swing.JFrame {
             );
             return;
         }
-        if (game.getCurrent() == game.getPlayer1()) {
 
-            game.nextTurn();
+        switch (mode()) {
+            case "human vs human" -> {
+                if (game.getCurrent() == game.getPlayer1()) {
 
-            // reset all for Player2.
-            java.util.Arrays.fill(placed, false);
-            java.util.Arrays.fill(fleet, null);
+                    game.nextTurn();
 
-            selectedShip = -1;
-            mouser = -1;
-            mousec = -1;
-            vertical = true;
+                    // reset all for Player2.
+                    java.util.Arrays.fill(placed, false);
+                    java.util.Arrays.fill(fleet, null);
 
-            orientationButton.setText("Vertical");
+                    selectedShip = -1;
+                    mouser = -1;
+                    mousec = -1;
+                    vertical = true;
 
-            makeGrid();
-            shipList();
+                    orientationButton.setText("Vertical");
 
-        } else {
-            // player2 has finished.
-            game.nextTurn();
+                    makeGrid();
+                    shipList();
 
-            gameFinished = false;
-            lastPlacedShip = -1;
-            lastPlacedBoard = null;
+                    return;
+                }
+                game.nextTurn();
+            }
+            case "human vs computer" -> {
+                aiPlace();
+                JOptionPane.showMessageDialog(
+                        this,
+                        "AI opponent secretly placed its ships, now start your fire.",
+                        "Hint",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            }
 
-            // switch to fire phase
-            createGameCells();
-            refreshGameWindow();
-
-            java.awt.CardLayout layout
-                    = (java.awt.CardLayout) getContentPane().getLayout();
-
-            layout.show(getContentPane(), "card4");
         }
+
+        //reset all
+        gameFinished = false;
+        lastPlacedShip = -1;
+        lastPlacedBoard = null;
+        // switch to fire phase
+        createGameCells();
+        refreshGameWindow();
+        java.awt.CardLayout layout = (java.awt.CardLayout) getContentPane().getLayout();
+        layout.show(getContentPane(), "card4");
     }//GEN-LAST:event_finishDisplayActionPerformed
 
     private void newGameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newGameActionPerformed
@@ -737,6 +799,10 @@ public class Battleship extends javax.swing.JFrame {
         // close all
         System.exit(0);
     }//GEN-LAST:event_exitActionPerformed
+
+    private void modeSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_modeSelectActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_modeSelectActionPerformed
 
     /**
      * @param args the command line arguments
@@ -775,6 +841,7 @@ public class Battleship extends javax.swing.JFrame {
     private javax.swing.JPanel gameBoard1;
     private javax.swing.JPanel gameBoard2;
     private javax.swing.JLabel mainTitle1;
+    private javax.swing.JComboBox<String> modeSelect;
     private javax.swing.JButton newGame;
     private javax.swing.JButton orientationButton;
     private javax.swing.JLabel shotResult;
