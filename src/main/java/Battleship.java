@@ -336,6 +336,7 @@ public class Battleship extends javax.swing.JFrame {
         String result = game.fire(r, c);
 
         shotResult.setText(shooter.getName() + ": " + result);
+        refreshGameWindow();
 
         if (end()) {
             return;
